@@ -4,7 +4,7 @@
 
 ## 规则
 - 每个接口生成一个独立的测试文件
-- 文件名格式：test_{operation}.py（如 test_create_user.py）
+- 文件名由调用方指定，不要自行决定或依赖首行注释
 - 使用 class 组织测试，class 名格式：Test{Operation}
 - 每个测试方法对应一条用例，docstring 包含用例编号
 - 使用 fixtures：base_url, auth_headers（从 conftest.py 获取）
@@ -12,17 +12,6 @@
 - 不硬编码任何 URL 或凭证
 - assert 使用 resp.status_code 和 resp.json()
 
-## conftest.py 模板
+## 输出格式
 
-import pytest
-import requests
-import os
-
-@pytest.fixture
-def base_url():
-    return os.getenv("API_BASE_URL", "http://localhost:8080")
-
-@pytest.fixture
-def auth_headers():
-    token = os.getenv("API_TOKEN", "")
-    return {"Authorization": f"Bearer {token}"} if token else {}
+只输出一个 `python` 代码块，不要任何解释。

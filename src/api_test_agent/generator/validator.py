@@ -2,10 +2,13 @@
 
 import ast
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
 import yaml
+
+COLLECT_TIMEOUT_SECONDS = 30
 
 
 def validate_python(files: dict[str, str]) -> dict[str, str]:
@@ -60,17 +63,37 @@ def validate_collect(files: dict[str, str]) -> dict[str, str]:
             filepath.parent.mkdir(parents=True, exist_ok=True)
             filepath.write_text(content, encoding="utf-8")
 
-        result = subprocess.run(
-            ["python", "-m", "pytest", "--collect-only", "-q", str(tmppath)],
-            capture_output=True,
-            text=True,
-            cwd=tmpdir,
-        )
+        try:
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    "-m",
+                    "pytest",
+                    "--collect-only",
+                    "-q",
+                    str(tmppath),
+                ],
+                capture_output=True,
+                text=True,
+                cwd=tmpdir,
+                timeout=COLLECT_TIMEOUT_SECONDS,
+            )
+        except subprocess.TimeoutExpired:
+            return {
+                "_collect": (
+                    "pytest collection timed out after "
+                    f"{COLLECT_TIMEOUT_SECONDS} seconds"
+                )
+            }
         if result.returncode != 0:
             stderr = result.stderr + result.stdout
             for filename in test_files:
                 if filename in stderr:
-                    lines = [l for l in stderr.splitlines() if filename in l or "ERROR" in l or "Error" in l]
+                    lines = [
+                        line
+                        for line in stderr.splitlines()
+                        if filename in line or "ERROR" in line or "Error" in line
+                    ]
                     errors[filename] = "\n".join(lines[:5]) if lines else stderr[:500]
             if not errors and stderr.strip():
                 errors["_collect"] = stderr[:500]

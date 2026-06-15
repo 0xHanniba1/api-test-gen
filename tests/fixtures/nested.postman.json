@@ -1,0 +1,94 @@
+{
+  "info": {
+    "name": "Nested API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+  },
+  "item": [
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get User",
+          "request": {
+            "method": "GET",
+            "auth": {"type": "noauth"},
+            "header": [
+              {"key": "X-Tenant-ID", "value": "tenant-1"},
+              {"key": "X-Disabled", "value": "ignore", "disabled": true}
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/:userId?expand=true",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", ":userId"],
+              "query": [
+                {"key": "expand", "value": "true"},
+                {"key": "ignored", "value": "1", "disabled": true}
+              ],
+              "variable": [
+                {"key": "userId", "value": "42", "description": "User identifier"}
+              ]
+            },
+            "description": {"content": "Returns one user.", "type": "text/plain"}
+          },
+          "response": [
+            {
+              "name": "OK",
+              "code": 200,
+              "header": [{"key": "Content-Type", "value": "application/json; charset=utf-8"}],
+              "body": "{\"id\": 42, \"name\": \"Kerwin\"}"
+            }
+          ]
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/vnd.example+json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Kerwin\", \"active\": true}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Uploads",
+      "item": [
+        {
+          "name": "Upload Avatar",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {"key": "file", "type": "file", "src": "/tmp/avatar.png"},
+                {"key": "caption", "type": "text", "value": "profile"}
+              ]
+            },
+            "url": {
+              "raw": "https://api.example.com/uploads",
+              "protocol": "https",
+              "host": ["api", "example", "com"],
+              "path": ["uploads"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

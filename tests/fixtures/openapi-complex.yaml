@@ -1,0 +1,130 @@
+openapi: "3.1.0"
+info:
+  title: Users API
+  version: "1.0.0"
+security:
+  - bearerAuth: []
+paths:
+  /tenants/{tenantId}/users:
+    parameters:
+      - $ref: "#/components/parameters/TenantId"
+    post:
+      operationId: createTenantUser
+      summary: Create tenant user
+      description: Creates a user inside a tenant.
+      tags: [users]
+      parameters:
+        - name: X-Trace-ID
+          in: header
+          schema:
+            type: string
+            format: uuid
+          example: trace-123
+        - name: Authorization
+          in: header
+          schema:
+            type: string
+      requestBody:
+        $ref: "#/components/requestBodies/CreateUser"
+      responses:
+        "201":
+          $ref: "#/components/responses/UserCreated"
+  /public/users/{userId}:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      operationId: getPublicUser
+      summary: Get public user
+      security: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^[a-z0-9-]+$"
+      responses:
+        "200":
+          description: User details
+          content:
+            application/vnd.example+json:
+              schema:
+                $ref: "#/components/schemas/User"
+  /uploads:
+    post:
+      operationId: uploadAvatar
+      summary: Upload avatar
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "204":
+          description: Uploaded
+  /optional-auth:
+    get:
+      operationId: optionalAuth
+      summary: Optional authentication
+      security:
+        - {}
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+components:
+  parameters:
+    TenantId:
+      name: tenantId
+      in: path
+      required: true
+      description: Tenant identifier
+      schema:
+        type: string
+        minLength: 3
+  requestBodies:
+    CreateUser:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/CreateUserInput"
+  responses:
+    UserCreated:
+      description: User created
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/User"
+  schemas:
+    CreateUserInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        manager:
+          $ref: "#/components/schemas/User"
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        manager:
+          $ref: "#/components/schemas/User"
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer

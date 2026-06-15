@@ -1,6 +1,5 @@
 """Auto-detect API documentation format."""
 
-import json
 from pathlib import Path
 
 import yaml
@@ -19,20 +18,19 @@ def detect_format(file_path: Path) -> str:
         if isinstance(data, dict):
             if "openapi" in data or "swagger" in data:
                 return "swagger"
-            if "info" in data and "_postman_id" in data.get("info", {}):
+            if _is_postman_collection(data):
                 return "postman"
     except yaml.YAMLError:
         pass
 
-    # Try JSON specifically (for files not parseable as YAML)
-    try:
-        data = json.loads(text)
-        if isinstance(data, dict):
-            if "openapi" in data or "swagger" in data:
-                return "swagger"
-            if "info" in data and "_postman_id" in data.get("info", {}):
-                return "postman"
-    except (json.JSONDecodeError, ValueError):
-        pass
-
     return "markdown"
+
+
+def _is_postman_collection(data: dict) -> bool:
+    info = data.get("info", {})
+    schema = info.get("schema", "") if isinstance(info, dict) else ""
+    return bool(
+        isinstance(info, dict)
+        and ("_postman_id" in info or "schema.getpostman.com" in str(schema))
+        and isinstance(data.get("item"), list)
+    )

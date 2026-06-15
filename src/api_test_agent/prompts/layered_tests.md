@@ -10,7 +10,7 @@
 - 测试数据从 YAML 文件加载，不硬编码在测试中
 - 每个测试方法的 docstring 包含用例编号（如 TC-001）
 - 使用 assert resp.status_code == d["expected_status"] 断言
-- 第一行注释为文件名，格式：# test_{tag}.py
+- 文件名由调用方固定为 `test_{tag}.py`，不要依赖首行注释
 
 ## 数据加载方式
 

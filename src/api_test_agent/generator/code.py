@@ -1,16 +1,20 @@
 """Code generator — converts test case documents into pytest+requests code."""
 
-import re
 from pathlib import Path
 
-import click
-
-from api_test_agent.generator.validator import validate_files
+from api_test_agent.generator.common import (
+    add_generated_file,
+    extract_fenced_content,
+    validate_and_repair,
+)
+from api_test_agent.generator.naming import assign_endpoint_filenames
+from api_test_agent.generator.testcase_document import (
+    EndpointSection,
+    parse_testcase_document,
+)
 from api_test_agent.llm import LlmClient
 
 PROMPTS_DIR = Path(__file__).parent.parent / "prompts"
-
-MAX_RETRIES = 2
 
 
 class CodeGenerator:
@@ -18,91 +22,68 @@ class CodeGenerator:
 
     def __init__(self, model: str | None = None):
         self.client = LlmClient(model=model)
+        self.prompt_template = (PROMPTS_DIR / "code.md").read_text(encoding="utf-8")
 
     def generate(self, testcases_markdown: str) -> dict[str, str]:
         """Generate code files from test case Markdown.
 
         Returns a dict of {filename: code_content}.
         """
-        files = {}
+        files: dict[str, str] = {}
+        document = parse_testcase_document(testcases_markdown)
+        filenames = assign_endpoint_filenames(document.sections)
 
-        # Generate conftest.py
-        conftest = self._generate_conftest()
-        files["conftest.py"] = conftest
+        add_generated_file(files, "conftest.py", self._render_conftest())
 
-        # Split test cases by endpoint sections and generate code for each
-        sections = self._split_sections(testcases_markdown)
-        for section in sections:
-            filename, code = self._generate_test_file(section)
-            if filename and code:
-                files[filename] = code
+        for section in document.sections:
+            filename = filenames[section.key]
+            code = self._generate_test_file(section, filename)
+            add_generated_file(files, filename, code)
 
-        # Validate and retry
-        for attempt in range(MAX_RETRIES + 1):
-            errors = validate_files(files)
-            if not errors:
-                break
-            if attempt < MAX_RETRIES:
-                click.echo(f"  Validation errors (attempt {attempt + 1}), retrying...")
-                files = self._retry_failed(files, errors)
-            else:
-                click.echo(f"  Validation errors after {MAX_RETRIES} retries:")
-                for fname, err in errors.items():
-                    click.echo(f"    {fname}: {err}")
+        return validate_and_repair(files, self._retry_failed)
 
-        return files
+    def _render_conftest(self) -> str:
+        return """import os
 
-    def _generate_conftest(self) -> str:
-        prompt_template = (PROMPTS_DIR / "code.md").read_text(encoding="utf-8")
+import pytest
+
+
+@pytest.fixture
+def base_url():
+    return os.getenv("API_BASE_URL", "http://localhost:8080")
+
+
+@pytest.fixture
+def auth_headers():
+    token = os.getenv("API_TOKEN", "")
+    return {"Authorization": f"Bearer {token}"} if token else {}
+"""
+
+    def _generate_test_file(self, section: EndpointSection, filename: str) -> str:
         response = self.client.call(
-            system=prompt_template,
-            user="Generate only the conftest.py file with base_url and auth_headers fixtures.",
+            system=self.prompt_template,
+            user=(
+                f"Generate the contents of {filename} for the following endpoint. "
+                "Return Python code only; the output path is assigned by the caller.\n\n"
+                f"{section.markdown}"
+            ),
         )
         return self._extract_code(response)
 
-    def _generate_test_file(self, section: str) -> tuple[str, str]:
-        prompt_template = (PROMPTS_DIR / "code.md").read_text(encoding="utf-8")
-        response = self.client.call(
-            system=prompt_template,
-            user=(
-                "Generate a single pytest test file for the following test cases. "
-                "Include the filename as a comment on the first line.\n\n"
-                f"{section}"
-            ),
-        )
-        code = self._extract_code(response)
-        filename = self._extract_filename(code)
-        return filename, code
-
-    def _split_sections(self, markdown: str) -> list[str]:
-        """Split Markdown into sections by ## headers."""
-        sections = re.split(r"(?=^## )", markdown, flags=re.MULTILINE)
-        return [s.strip() for s in sections if s.strip() and s.strip().startswith("##")]
-
     def _extract_code(self, response: str) -> str:
         """Extract Python code from Markdown code blocks."""
-        match = re.search(r"```python\s*\n(.*?)```", response, re.DOTALL)
-        if match:
-            return match.group(1).strip()
-        return response.strip()
+        return extract_fenced_content(response, "python")
 
-    def _extract_filename(self, code: str) -> str:
-        """Extract filename from first-line comment like '# test_xxx.py'."""
-        first_line = code.split("\n")[0]
-        match = re.search(r"(test_\w+\.py|conftest\.py)", first_line)
-        if match:
-            return match.group(1)
-        return "test_generated.py"
-
-    def _retry_failed(self, files: dict[str, str], errors: dict[str, str]) -> dict[str, str]:
+    def _retry_failed(
+        self, files: dict[str, str], errors: dict[str, str]
+    ) -> dict[str, str]:
         """Re-generate files that failed validation."""
-        prompt_template = (PROMPTS_DIR / "code.md").read_text(encoding="utf-8")
         for filename, error_msg in errors.items():
             if filename == "_collect":
                 continue
             if filename.endswith(".py") and filename in files:
                 response = self.client.call(
-                    system=prompt_template,
+                    system=self.prompt_template,
                     user=(
                         f"上次生成的 {filename} 有错误：{error_msg}\n\n"
                         f"请修复并重新生成。原始代码：\n```python\n{files[filename]}\n```"

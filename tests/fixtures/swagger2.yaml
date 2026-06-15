@@ -1,0 +1,93 @@
+swagger: "2.0"
+info:
+  title: Legacy Users API
+  version: "1.0.0"
+consumes:
+  - application/json
+produces:
+  - application/json
+security:
+  - apiKey: []
+parameters:
+  UserId:
+    name: userId
+    in: path
+    required: true
+    type: integer
+    format: int64
+responses:
+  NotFound:
+    description: User not found
+    schema:
+      $ref: "#/definitions/Error"
+paths:
+  /users/{userId}:
+    parameters:
+      - $ref: "#/parameters/UserId"
+    get:
+      operationId: getUser
+      summary: Get user
+      security: []
+      responses:
+        "200":
+          description: User details
+          schema:
+            $ref: "#/definitions/User"
+        "404":
+          $ref: "#/responses/NotFound"
+    put:
+      operationId: updateUser
+      summary: Update user
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/UpdateUser"
+      responses:
+        "200":
+          description: Updated
+          schema:
+            $ref: "#/definitions/User"
+  /uploads:
+    post:
+      operationId: uploadFile
+      summary: Upload file
+      consumes:
+        - multipart/form-data
+      parameters:
+        - name: file
+          in: formData
+          required: true
+          type: file
+        - name: note
+          in: formData
+          type: string
+          maxLength: 200
+      responses:
+        "204":
+          description: Uploaded
+definitions:
+  UpdateUser:
+    type: object
+    required: [name]
+    properties:
+      name:
+        type: string
+  User:
+    type: object
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+  Error:
+    type: object
+    properties:
+      message:
+        type: string
+securityDefinitions:
+  apiKey:
+    type: apiKey
+    name: X-API-Key
+    in: header

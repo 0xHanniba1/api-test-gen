@@ -9,7 +9,7 @@
 - 构造函数接收 HttpClient 实例
 - 方法调用 self.client 的 get/post/put/delete/patch 方法
 - 不在方法内做任何断言或数据处理，只负责发送请求并返回 response
-- 第一行注释为文件名，格式：# {tag}_api.py
+- 文件名由调用方固定为 `{tag}_api.py`，不要依赖首行注释
 
 ## 示例
 

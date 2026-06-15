@@ -20,6 +20,14 @@ class TestParam:
         )
         assert p.constraints["min"] == 0
 
+    def test_mutable_defaults_are_isolated(self):
+        first = Param(name="a", location="query")
+        second = Param(name="b", location="query")
+
+        first.constraints["minimum"] = 1
+
+        assert second.constraints == {}
+
 
 class TestApiEndpoint:
     def test_create_minimal_endpoint(self):
@@ -74,3 +82,24 @@ class TestApiEndpoint:
         ep2 = ApiEndpoint(**data)
         assert ep2.path == "/api/users/{id}"
         assert len(ep2.parameters) == 1
+
+    def test_normalizes_method_path_and_content_types(self):
+        endpoint = ApiEndpoint(
+            method="post",
+            path="users",
+            content_types=["multipart/form-data", "application/json"],
+        )
+
+        assert endpoint.method == "POST"
+        assert endpoint.path == "/users"
+        assert endpoint.content_type == "multipart/form-data"
+
+    def test_defaults_are_isolated(self):
+        first = ApiEndpoint(method="GET", path="/first")
+        second = ApiEndpoint(method="GET", path="/second")
+
+        first.tags.append("first")
+        first.responses["200"] = {"description": "ok"}
+
+        assert second.tags == []
+        assert second.responses == {}

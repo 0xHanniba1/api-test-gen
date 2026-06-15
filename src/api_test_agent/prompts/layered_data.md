@@ -11,7 +11,7 @@
   - path_params: 路径参数
   - expected_status: 预期状态码
 - 文件名格式：{tag}.yaml
-- 第一行注释为文件名，格式：# {tag}.yaml
+- 文件名由调用方指定，不要依赖首行注释
 
 ## 示例
 

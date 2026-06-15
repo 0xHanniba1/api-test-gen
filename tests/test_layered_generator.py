@@ -1,14 +1,22 @@
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
-from api_test_agent.parser.base import ApiEndpoint, Param
+import pytest
+
 from api_test_agent.generator.layered import LayeredCodeGenerator
+from api_test_agent.generator.testcase_document import TestCaseDocumentError
+from api_test_agent.parser.base import ApiEndpoint
 
 
 def _ep(method, path, tags):
     return ApiEndpoint(
-        method=method, path=path, summary=f"{method} {path}",
-        parameters=[], request_body=None, responses={},
-        auth_required=False, tags=tags,
+        method=method,
+        path=path,
+        summary=f"{method} {path}",
+        parameters=[],
+        request_body=None,
+        responses={},
+        auth_required=False,
+        tags=tags,
     )
 
 
@@ -30,6 +38,12 @@ class TestGroupByTag:
         gen = LayeredCodeGenerator.__new__(LayeredCodeGenerator)
         groups = gen._group_by_tag(endpoints)
         assert "default" in groups
+
+    def test_normalizes_tag_for_python_and_file_paths(self):
+        endpoints = [_ep("GET", "/health", ["../../Admin API"])]
+        gen = LayeredCodeGenerator.__new__(LayeredCodeGenerator)
+        groups = gen._group_by_tag(endpoints)
+        assert set(groups) == {"admin_api"}
 
 
 class TestTemplateGeneration:
@@ -77,7 +91,7 @@ class TestTemplateGeneration:
         assert "params.ENV" in jf
 
 
-MOCK_API_RESPONSE = '''```python
+MOCK_API_RESPONSE = """```python
 # users_api.py
 from base.client import HttpClient
 
@@ -91,9 +105,9 @@ class UsersApi:
 
     def get_user(self, user_id: int):
         return self.client.get(f"/api/users/{user_id}")
-```'''
+```"""
 
-MOCK_DATA_RESPONSE = '''```yaml
+MOCK_DATA_RESPONSE = """```yaml
 # users.yaml
 create_user:
   valid:
@@ -105,9 +119,9 @@ create_user:
     body:
       email: "a@b.com"
     expected_status: 400
-```'''
+```"""
 
-MOCK_SERVICES_RESPONSE = '''```python
+MOCK_SERVICES_RESPONSE = """```python
 # user_flow.py
 from api.users_api import UsersApi
 
@@ -120,7 +134,7 @@ class UserFlow:
         resp = self.api.create_user(body)
         user_id = resp.json()["id"]
         return self.api.get_user(user_id)
-```'''
+```"""
 
 MOCK_TESTS_RESPONSE = '''```python
 # test_users.py
@@ -145,6 +159,10 @@ class TestCreateUser:
         resp = users_api.create_user(d["body"])
         assert resp.status_code == d["expected_status"]
 ```'''
+
+FIXED_API_RESPONSE = MOCK_API_RESPONSE.replace(
+    "class UsersApi:", "class UsersApi:  # fixed"
+)
 
 
 class TestApiLayerGeneration:
@@ -197,9 +215,24 @@ class TestServicesLayerGeneration:
         gen = LayeredCodeGenerator(model="test")
         result = gen._generate_services_layer("users", endpoints, api_code)
 
-        assert "user_flow.py" in result[0]
+        assert result[0] == "users_flow.py"
         assert "class UserFlow" in result[1]
         mock_client.call.assert_called_once()
+
+    @patch("api_test_agent.generator.layered.LlmClient")
+    def test_service_filename_does_not_depend_on_llm_comment(self, MockLlmClient):
+        mock_client = MagicMock()
+        mock_client.call.return_value = MOCK_SERVICES_RESPONSE.replace(
+            "# user_flow.py", "# ../../escape.py"
+        )
+        MockLlmClient.return_value = mock_client
+
+        gen = LayeredCodeGenerator(model="test")
+        filename, _ = gen._generate_services_layer(
+            "users", [_ep("GET", "/api/users", ["users"])], "class UsersApi: ..."
+        )
+
+        assert filename == "users_flow.py"
 
 
 class TestTestsLayerGeneration:
@@ -213,7 +246,9 @@ class TestTestsLayerGeneration:
         api_code = "class UsersApi:\n    def create_user(self, body): ..."
         data_content = "create_user:\n  valid:\n    body: {}\n    expected_status: 201"
         gen = LayeredCodeGenerator(model="test")
-        result = gen._generate_tests_layer("users", testcases_section, api_code, data_content)
+        result = gen._generate_tests_layer(
+            "users", testcases_section, api_code, data_content
+        )
 
         assert "test_users.py" in result[0]
         assert "class TestCreateUser" in result[1]
@@ -259,8 +294,15 @@ class TestSectionExtraction:
         assert "GET /api/users/{id}" in section
         assert "GET /api/pets" not in section
 
+    def test_missing_section_fails_explicitly(self):
+        endpoints = [_ep("DELETE", "/api/users/{id}", ["users"])]
+        gen = LayeredCodeGenerator.__new__(LayeredCodeGenerator)
 
-MOCK_PETS_API_RESPONSE = '''```python
+        with pytest.raises(TestCaseDocumentError, match="Missing test-case section"):
+            gen._extract_sections_for_endpoints(SAMPLE_TESTCASES, endpoints)
+
+
+MOCK_PETS_API_RESPONSE = """```python
 # pets_api.py
 from base.client import HttpClient
 
@@ -271,16 +313,16 @@ class PetsApi:
 
     def list_pets(self):
         return self.client.get("/api/pets")
-```'''
+```"""
 
-MOCK_PETS_DATA_RESPONSE = '''```yaml
+MOCK_PETS_DATA_RESPONSE = """```yaml
 # pets.yaml
 list_pets:
   valid:
     expected_status: 200
-```'''
+```"""
 
-MOCK_PETS_SERVICES_RESPONSE = '''```python
+MOCK_PETS_SERVICES_RESPONSE = """```python
 # pet_flow.py
 from api.pets_api import PetsApi
 
@@ -288,27 +330,27 @@ from api.pets_api import PetsApi
 class PetFlow:
     def __init__(self, api: PetsApi):
         self.api = api
-```'''
+```"""
 
-MOCK_PETS_TESTS_RESPONSE = '''```python
+MOCK_PETS_TESTS_RESPONSE = """```python
 # test_pets.py
 class TestListPets:
     def test_success(self, pets_api):
         resp = pets_api.list_pets()
         assert resp.status_code == 200
-```'''
+```"""
 
 
 class TestLayeredGenerate:
-    @patch("api_test_agent.generator.layered.validate_files", return_value={})
+    @patch("api_test_agent.generator.common.validate_files", return_value={})
     @patch("api_test_agent.generator.layered.LlmClient")
     def test_generate_returns_all_layers(self, MockLlmClient, _mock_validate):
         mock_client = MagicMock()
         mock_client.call.side_effect = [
-            MOCK_API_RESPONSE,      # api layer for users
-            MOCK_DATA_RESPONSE,     # data layer for users
-            MOCK_SERVICES_RESPONSE, # services layer for users
-            MOCK_TESTS_RESPONSE,    # tests layer for users
+            MOCK_API_RESPONSE,  # api layer for users
+            MOCK_DATA_RESPONSE,  # data layer for users
+            MOCK_SERVICES_RESPONSE,  # services layer for users
+            MOCK_TESTS_RESPONSE,  # tests layer for users
         ]
         MockLlmClient.return_value = mock_client
 
@@ -338,7 +380,7 @@ class TestLayeredGenerate:
 
         assert mock_client.call.call_count == 4
 
-    @patch("api_test_agent.generator.layered.validate_files", return_value={})
+    @patch("api_test_agent.generator.common.validate_files", return_value={})
     @patch("api_test_agent.generator.layered.LlmClient")
     def test_generate_multi_tag(self, MockLlmClient, _mock_validate):
         """Test with 2 tags: users + pets — should produce 8 LLM calls."""
@@ -370,8 +412,8 @@ class TestLayeredGenerate:
         assert "api/pets_api.py" in files
         assert "data/users.yaml" in files
         assert "data/pets.yaml" in files
-        assert "services/user_flow.py" in files
-        assert "services/pet_flow.py" in files
+        assert "services/users_flow.py" in files
+        assert "services/pets_flow.py" in files
         assert "tests/test_users.py" in files
         assert "tests/test_pets.py" in files
 
@@ -384,16 +426,16 @@ class TestLayeredGenerate:
 
 
 class TestLayeredValidation:
-    @patch("api_test_agent.generator.layered.validate_files")
+    @patch("api_test_agent.generator.common.validate_files")
     @patch("api_test_agent.generator.layered.LlmClient")
     def test_retries_on_validation_error(self, MockLlmClient, mock_validate):
         mock_client = MagicMock()
         mock_client.call.side_effect = [
-            MOCK_API_RESPONSE,       # api layer
-            MOCK_DATA_RESPONSE,      # data layer
+            MOCK_API_RESPONSE,  # api layer
+            MOCK_DATA_RESPONSE,  # data layer
             MOCK_SERVICES_RESPONSE,  # services layer
-            MOCK_TESTS_RESPONSE,     # tests layer
-            MOCK_API_RESPONSE,       # retry: fixed api
+            MOCK_TESTS_RESPONSE,  # tests layer
+            FIXED_API_RESPONSE,  # retry: fixed api
         ]
         MockLlmClient.return_value = mock_client
 
@@ -413,7 +455,7 @@ class TestLayeredValidation:
         assert mock_validate.call_count == 2
         assert mock_client.call.call_count == 5  # 4 layers + 1 retry
 
-    @patch("api_test_agent.generator.layered.validate_files")
+    @patch("api_test_agent.generator.common.validate_files")
     @patch("api_test_agent.generator.layered.LlmClient")
     def test_no_retry_when_valid(self, MockLlmClient, mock_validate):
         mock_client = MagicMock()
@@ -432,7 +474,7 @@ class TestLayeredValidation:
             _ep("GET", "/api/users/{id}", ["users"]),
         ]
         gen = LayeredCodeGenerator(model="test")
-        files = gen.generate(SAMPLE_TESTCASES, endpoints)
+        gen.generate(SAMPLE_TESTCASES, endpoints)
 
         assert mock_validate.call_count == 1
         assert mock_client.call.call_count == 4

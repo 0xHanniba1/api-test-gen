@@ -17,12 +17,16 @@ Output a JSON array of endpoint objects. Each object must have these fields:
 - method: HTTP method (GET/POST/PUT/DELETE/PATCH)
 - path: URL path (e.g., /api/users/{id})
 - summary: Brief description
-- parameters: Array of {name, location (query/path/header), required (bool), param_type (string/integer/boolean/array/object), description, constraints}
+- description: Detailed description (empty string if missing)
+- operation_id: Stable operation identifier (empty string if missing)
+- parameters: Array of {name, location (query/path/header/cookie), required (bool), param_type (string/integer/boolean/array/object), description, constraints, example}
 - request_body: JSON Schema object or null
+- request_body_required: boolean
 - responses: Object of {status_code: {description}}
 - auth_required: boolean
 - tags: Array of strings
 - content_type: string (default "application/json")
+- content_types: Array of supported request content types
 
 Output ONLY the JSON array, no other text."""
 

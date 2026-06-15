@@ -1,4 +1,14 @@
-from api_test_agent.generator.validator import validate_python, validate_yaml, validate_collect, validate_files
+import subprocess
+import sys
+from unittest.mock import MagicMock, patch
+
+from api_test_agent.generator.validator import (
+    COLLECT_TIMEOUT_SECONDS,
+    validate_collect,
+    validate_files,
+    validate_python,
+    validate_yaml,
+)
 
 
 class TestValidatePython:
@@ -54,6 +64,26 @@ class TestValidateCollect:
         files = {"__init__.py": ""}
         errors = validate_collect(files)
         assert errors == {}
+
+    @patch("api_test_agent.generator.validator.subprocess.run")
+    def test_uses_current_interpreter_and_timeout(self, mock_run):
+        mock_run.return_value = MagicMock(returncode=0, stderr="", stdout="")
+
+        errors = validate_collect({"test_ok.py": "def test_ok():\n    assert True\n"})
+
+        assert errors == {}
+        command = mock_run.call_args.args[0]
+        assert command[:3] == [sys.executable, "-m", "pytest"]
+        assert mock_run.call_args.kwargs["timeout"] == COLLECT_TIMEOUT_SECONDS
+
+    @patch("api_test_agent.generator.validator.subprocess.run")
+    def test_collection_timeout_is_reported(self, mock_run):
+        mock_run.side_effect = subprocess.TimeoutExpired("pytest", 30)
+
+        errors = validate_collect({"test_slow.py": "def test_slow():\n    pass\n"})
+
+        assert "_collect" in errors
+        assert "timed out" in errors["_collect"]
 
 
 class TestValidateFiles:

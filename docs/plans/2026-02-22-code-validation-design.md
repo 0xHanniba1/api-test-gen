@@ -27,7 +27,7 @@ generate() 生成文件
        │
       否（已重试 2 次）
        ↓
-   输出警告 + 保留最后一版
+   抛出校验错误 + CLI 非零退出，不写入无效代码
 ```
 
 ## 校验项
@@ -44,7 +44,9 @@ generate() 生成文件
 - **pytest collect 需要临时目录** — 先将全部文件写入临时目录，再执行 collect
 - **flat 和 layered 两种模式都做校验** — 校验逻辑通用，不区分架构模式
 - **重试时把错误信息拼入 prompt** — 例如 `"上次生成的代码有语法错误：SyntaxError at line 15。请修复并重新生成。"`
-- **最多重试 2 次** — 避免无限循环，最终仍失败则输出警告并保留最后一版
+- **最多重试 2 次** — 避免无限循环，最终仍失败则抛出 `GenerationValidationError`
+- **收集超时** — `pytest --collect-only` 使用当前 Python 解释器，30 秒后终止
+- **写盘隔离** — 只有校验通过后才进入安全写盘，拒绝目录逃逸与路径冲突
 
 ## 代码改动范围
 
@@ -53,6 +55,8 @@ generate() 生成文件
 | 文件 | 职责 |
 |------|------|
 | `src/api_test_agent/generator/validator.py` | `validate_python()`、`validate_yaml()`、`validate_collect()` |
+| `src/api_test_agent/generator/common.py` | 两种生成器共用的校验重试与最终失败异常 |
+| `src/api_test_agent/output.py` | 生成文件安全写盘 |
 | `tests/test_validator.py` | 校验器单元测试 |
 
 ### 修改文件
