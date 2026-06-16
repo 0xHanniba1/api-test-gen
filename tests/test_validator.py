@@ -2,7 +2,7 @@ import subprocess
 import sys
 from unittest.mock import MagicMock, patch
 
-from api_test_agent.generator.validator import (
+from api_test_gen.generator.validator import (
     COLLECT_TIMEOUT_SECONDS,
     validate_collect,
     validate_files,
@@ -65,7 +65,7 @@ class TestValidateCollect:
         errors = validate_collect(files)
         assert errors == {}
 
-    @patch("api_test_agent.generator.validator.subprocess.run")
+    @patch("api_test_gen.generator.validator.subprocess.run")
     def test_uses_current_interpreter_and_timeout(self, mock_run):
         mock_run.return_value = MagicMock(returncode=0, stderr="", stdout="")
 
@@ -76,7 +76,7 @@ class TestValidateCollect:
         assert command[:3] == [sys.executable, "-m", "pytest"]
         assert mock_run.call_args.kwargs["timeout"] == COLLECT_TIMEOUT_SECONDS
 
-    @patch("api_test_agent.generator.validator.subprocess.run")
+    @patch("api_test_gen.generator.validator.subprocess.run")
     def test_collection_timeout_is_reported(self, mock_run):
         mock_run.side_effect = subprocess.TimeoutExpired("pytest", 30)
 

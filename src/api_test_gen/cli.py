@@ -1,22 +1,22 @@
-"""CLI entry point for api-test-agent."""
+"""CLI entry point for api-test-gen."""
 
 from pathlib import Path
 
 import click
 
-from api_test_agent.generator.common import GenerationError
-from api_test_agent.generator.testcase_document import (
+from api_test_gen.generator.common import GenerationError
+from api_test_gen.generator.testcase_document import (
     next_case_index,
     parse_testcase_document,
 )
-from api_test_agent.output import (
+from api_test_gen.output import (
     OutputError,
     WriteResult,
     write_generated_files,
     write_text,
 )
-from api_test_agent.parser.base import ApiEndpoint
-from api_test_agent.pipeline import (
+from api_test_gen.parser.base import ApiEndpoint
+from api_test_gen.pipeline import (
     DocumentParseError,
     filter_endpoints,
     generate_code,

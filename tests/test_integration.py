@@ -5,9 +5,9 @@ from unittest.mock import MagicMock, patch
 
 from click.testing import CliRunner
 
-from api_test_agent.cli import main
-from api_test_agent.generator.layered import LayeredCodeGenerator
-from api_test_agent.parser.base import ApiEndpoint
+from api_test_gen.cli import main
+from api_test_gen.generator.layered import LayeredCodeGenerator
+from api_test_gen.parser.base import ApiEndpoint
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -71,8 +71,8 @@ class TestShowPet:
 
 
 class TestEndToEnd:
-    @patch("api_test_agent.generator.code.LlmClient")
-    @patch("api_test_agent.generator.testcase.LlmClient")
+    @patch("api_test_gen.generator.code.LlmClient")
+    @patch("api_test_gen.generator.testcase.LlmClient")
     def test_full_pipeline_petstore(self, MockTCLlm, MockCodeLlm, tmp_path):
         # Mock test case generation (one call per endpoint, petstore has 3)
         mock_tc_client = MagicMock()
@@ -116,7 +116,7 @@ class TestEndToEnd:
         assert "TC-001" in testcases_content
         assert "TC-006" in testcases_content
 
-    @patch("api_test_agent.generator.layered.LlmClient")
+    @patch("api_test_gen.generator.layered.LlmClient")
     def test_layered_project_passes_real_collection(self, MockLlmClient):
         mock_client = MagicMock()
         mock_client.call.side_effect = [

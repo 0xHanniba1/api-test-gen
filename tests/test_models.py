@@ -1,4 +1,4 @@
-from api_test_agent.parser.base import Param, ApiEndpoint
+from api_test_gen.parser.base import Param, ApiEndpoint
 
 
 class TestParam:

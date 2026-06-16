@@ -1,6 +1,6 @@
 import pytest
 
-from api_test_agent.output import (
+from api_test_gen.output import (
     OutputPathConflictError,
     UnsafeOutputPathError,
     write_generated_files,

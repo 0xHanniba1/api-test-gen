@@ -1,8 +1,8 @@
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 import json
-from api_test_agent.parser.markdown import parse_markdown
-from api_test_agent.parser.base import ApiEndpoint
+from api_test_gen.parser.markdown import parse_markdown
+from api_test_gen.parser.base import ApiEndpoint
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -43,7 +43,7 @@ MOCK_LLM_RESPONSE = json.dumps([
 
 
 class TestMarkdownParser:
-    @patch("api_test_agent.parser.markdown.LlmClient")
+    @patch("api_test_gen.parser.markdown.LlmClient")
     def test_parse_returns_endpoints(self, MockLlmClient):
         mock_client = MagicMock()
         mock_client.call.return_value = MOCK_LLM_RESPONSE
@@ -53,7 +53,7 @@ class TestMarkdownParser:
         assert len(endpoints) == 2
         assert all(isinstance(ep, ApiEndpoint) for ep in endpoints)
 
-    @patch("api_test_agent.parser.markdown.LlmClient")
+    @patch("api_test_gen.parser.markdown.LlmClient")
     def test_parse_extracts_correct_data(self, MockLlmClient):
         mock_client = MagicMock()
         mock_client.call.return_value = MOCK_LLM_RESPONSE

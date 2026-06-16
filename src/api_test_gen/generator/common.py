@@ -5,7 +5,7 @@ import re
 from collections.abc import Callable
 from pathlib import Path
 
-from api_test_agent.generator.validator import validate_files
+from api_test_gen.generator.validator import validate_files
 
 MAX_RETRIES = 2
 

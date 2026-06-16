@@ -1,5 +1,5 @@
-from api_test_agent.parser.base import Param, ApiEndpoint
-from api_test_agent.skills.loader import select_skills, load_skill_content
+from api_test_gen.parser.base import Param, ApiEndpoint
+from api_test_gen.skills.loader import select_skills, load_skill_content
 
 
 def _make_endpoint(**overrides) -> ApiEndpoint:

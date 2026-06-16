@@ -2,8 +2,8 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
-from api_test_agent.generator.code import CodeGenerator
-from api_test_agent.generator.common import GenerationValidationError
+from api_test_gen.generator.code import CodeGenerator
+from api_test_gen.generator.common import GenerationValidationError
 
 SAMPLE_TESTCASES = """## POST /api/users
 
@@ -43,8 +43,8 @@ SECOND_FIXED_CODE_RESPONSE = MOCK_CODE_RESPONSE.replace(
 
 
 class TestCodeGenerator:
-    @patch("api_test_agent.generator.common.validate_files", return_value={})
-    @patch("api_test_agent.generator.code.LlmClient")
+    @patch("api_test_gen.generator.common.validate_files", return_value={})
+    @patch("api_test_gen.generator.code.LlmClient")
     def test_generate_returns_file_dict(self, MockLlmClient, _mock_validate):
         mock_client = MagicMock()
         mock_client.call.return_value = MOCK_CODE_RESPONSE
@@ -58,8 +58,8 @@ class TestCodeGenerator:
         assert "test_post_api_users.py" in files
         assert "API_BASE_URL" in files["conftest.py"]
 
-    @patch("api_test_agent.generator.common.validate_files", return_value={})
-    @patch("api_test_agent.generator.code.LlmClient")
+    @patch("api_test_gen.generator.common.validate_files", return_value={})
+    @patch("api_test_gen.generator.code.LlmClient")
     def test_generated_code_contains_class(self, MockLlmClient, _mock_validate):
         mock_client = MagicMock()
         mock_client.call.return_value = MOCK_CODE_RESPONSE
@@ -73,8 +73,8 @@ class TestCodeGenerator:
         for content in test_files.values():
             assert "class Test" in content
 
-    @patch("api_test_agent.generator.common.validate_files", return_value={})
-    @patch("api_test_agent.generator.code.LlmClient")
+    @patch("api_test_gen.generator.common.validate_files", return_value={})
+    @patch("api_test_gen.generator.code.LlmClient")
     def test_slug_collisions_get_distinct_stable_filenames(
         self, MockLlmClient, _mock_validate
     ):
@@ -97,8 +97,8 @@ class TestCodeGenerator:
 
 
 class TestCodeGeneratorValidation:
-    @patch("api_test_agent.generator.common.validate_files")
-    @patch("api_test_agent.generator.code.LlmClient")
+    @patch("api_test_gen.generator.common.validate_files")
+    @patch("api_test_gen.generator.code.LlmClient")
     def test_retries_on_validation_error(self, MockLlmClient, mock_validate):
         """Validation fails first, then passes after retry."""
         mock_client = MagicMock()
@@ -121,8 +121,8 @@ class TestCodeGeneratorValidation:
         assert mock_validate.call_count == 2
         assert mock_client.call.call_count == 2
 
-    @patch("api_test_agent.generator.common.validate_files")
-    @patch("api_test_agent.generator.code.LlmClient")
+    @patch("api_test_gen.generator.common.validate_files")
+    @patch("api_test_gen.generator.code.LlmClient")
     def test_gives_up_after_max_retries(self, MockLlmClient, mock_validate):
         mock_client = MagicMock()
         mock_client.call.side_effect = [
@@ -143,8 +143,8 @@ class TestCodeGeneratorValidation:
         # initial + 2 retries = 3 validation calls
         assert mock_validate.call_count == 3
 
-    @patch("api_test_agent.generator.common.validate_files")
-    @patch("api_test_agent.generator.code.LlmClient")
+    @patch("api_test_gen.generator.common.validate_files")
+    @patch("api_test_gen.generator.code.LlmClient")
     def test_no_retry_when_valid(self, MockLlmClient, mock_validate):
         mock_client = MagicMock()
         mock_client.call.return_value = MOCK_CODE_RESPONSE

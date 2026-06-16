@@ -48,11 +48,11 @@ ApiEndpoint → [TestCase Generator + Skills] → JSON 草稿 → Markdown 文�
 ### 2.2 模块职责
 
 ```
-api-test-agent/
+api-test-gen/
 ├── pyproject.toml
 ├── README.md
 ├── src/
-│   └── api_test_agent/
+│   └── api_test_gen/
 │       ├── __init__.py
 │       ├── cli.py              # CLI 入口，参数与用户反馈
 │       ├── pipeline.py         # 应用层编排：解析、过滤、生成器选择
@@ -374,13 +374,13 @@ generate() 生成文件
 
 ```bash
 # 全流程：文档 → 用例 → 代码
-api-test-agent run api-doc.yaml -o output/
+api-test-gen run api-doc.yaml -o output/
 
 # 只生成测试用例文档
-api-test-agent gen-cases api-doc.yaml -o testcases.md
+api-test-gen gen-cases api-doc.yaml -o testcases.md
 
 # 从已有用例文档生成代码
-api-test-agent gen-code testcases.md -o output/
+api-test-gen gen-code testcases.md -o output/
 ```
 
 ### 4.2 选项

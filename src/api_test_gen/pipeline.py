@@ -6,14 +6,14 @@ from pathlib import Path
 import yaml
 from pydantic import ValidationError
 
-from api_test_agent.generator.code import CodeGenerator
-from api_test_agent.generator.layered import LayeredCodeGenerator
-from api_test_agent.generator.testcase import TestCaseGenerator
-from api_test_agent.parser.base import ApiEndpoint
-from api_test_agent.parser.detect import detect_format
-from api_test_agent.parser.markdown import parse_markdown
-from api_test_agent.parser.postman import parse_postman
-from api_test_agent.parser.swagger import parse_openapi
+from api_test_gen.generator.code import CodeGenerator
+from api_test_gen.generator.layered import LayeredCodeGenerator
+from api_test_gen.generator.testcase import TestCaseGenerator
+from api_test_gen.parser.base import ApiEndpoint
+from api_test_gen.parser.detect import detect_format
+from api_test_gen.parser.markdown import parse_markdown
+from api_test_gen.parser.postman import parse_postman
+from api_test_gen.parser.swagger import parse_openapi
 
 
 class DocumentParseError(ValueError):

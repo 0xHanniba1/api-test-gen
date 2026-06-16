@@ -3,11 +3,11 @@ from unittest.mock import patch
 
 from click.testing import CliRunner
 
-from api_test_agent.cli import main
-from api_test_agent.generator.common import GenerationValidationError
-from api_test_agent.generator.testcase_document import TestCaseDocumentError
-from api_test_agent.parser.base import ApiEndpoint
-from api_test_agent.pipeline import filter_endpoints
+from api_test_gen.cli import main
+from api_test_gen.generator.common import GenerationValidationError
+from api_test_gen.generator.testcase_document import TestCaseDocumentError
+from api_test_gen.parser.base import ApiEndpoint
+from api_test_gen.pipeline import filter_endpoints
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -26,7 +26,7 @@ def _make_endpoint(method: str, path: str) -> ApiEndpoint:
 
 
 class TestCliGenCases:
-    @patch("api_test_agent.cli.generate_testcases")
+    @patch("api_test_gen.cli.generate_testcases")
     def test_gen_cases_with_swagger(self, mock_generate, tmp_path):
         mock_generate.return_value = "## GET /pets\n| TC-001 | ... |"
         output_file = tmp_path / "cases.md"
@@ -45,8 +45,8 @@ class TestCliGenCases:
         assert output_file.exists()
         mock_generate.assert_called_once()
 
-    @patch("api_test_agent.cli.generate_testcases", return_value="## GET /pets")
-    @patch("api_test_agent.cli.parse_document")
+    @patch("api_test_gen.cli.generate_testcases", return_value="## GET /pets")
+    @patch("api_test_gen.cli.parse_document")
     def test_markdown_model_is_forwarded(self, mock_parse, _mock_generate, tmp_path):
         mock_parse.return_value = [_make_endpoint("GET", "/pets")]
         doc = tmp_path / "api.md"
@@ -89,7 +89,7 @@ class TestCliGenCases:
         assert "Failed to parse" in result.output
         assert "Traceback" not in result.output
 
-    @patch("api_test_agent.cli.generate_testcases")
+    @patch("api_test_gen.cli.generate_testcases")
     def test_generation_error_is_user_facing(self, mock_generate, tmp_path):
         mock_generate.side_effect = TestCaseDocumentError(
             "Invalid test-case JSON: expected an array"
@@ -113,7 +113,7 @@ class TestCliGenCases:
 
 
 class TestCliGenCode:
-    @patch("api_test_agent.cli.generate_code")
+    @patch("api_test_gen.cli.generate_code")
     def test_gen_code_from_markdown(self, mock_generate, tmp_path):
         # Create input test cases file
         cases_file = tmp_path / "cases.md"
@@ -140,7 +140,7 @@ class TestCliGenCode:
         assert (output_dir / "conftest.py").exists()
         assert (output_dir / "test_users.py").exists()
 
-    @patch("api_test_agent.cli.generate_code")
+    @patch("api_test_gen.cli.generate_code")
     def test_rejects_generated_path_outside_output(self, mock_generate, tmp_path):
         mock_generate.return_value = {"../escape.py": "# unsafe"}
         cases_file = tmp_path / "cases.md"
@@ -154,7 +154,7 @@ class TestCliGenCode:
         assert "Unsafe generated path" in result.output
         assert not (tmp_path / "escape.py").exists()
 
-    @patch("api_test_agent.cli.generate_code")
+    @patch("api_test_gen.cli.generate_code")
     def test_reports_validation_failure(self, mock_generate, tmp_path):
         mock_generate.side_effect = GenerationValidationError(
             {"test_pets.py": "SyntaxError: invalid syntax"}
@@ -171,8 +171,8 @@ class TestCliGenCode:
 
 
 class TestCliRun:
-    @patch("api_test_agent.cli.generate_code")
-    @patch("api_test_agent.cli.generate_testcases")
+    @patch("api_test_gen.cli.generate_code")
+    @patch("api_test_gen.cli.generate_testcases")
     def test_run_full_pipeline(self, mock_testcases, mock_code, tmp_path):
         mock_testcases.return_value = "## GET /pets\n| TC-001 | ... |"
         mock_code.return_value = {
@@ -230,7 +230,7 @@ class TestFilterEndpoints:
 
 class TestAppendMode:
     @patch(
-        "api_test_agent.cli.generate_testcases",
+        "api_test_gen.cli.generate_testcases",
         return_value="""## POST /new
 
 | 编号 | 场景 | 输入 | 预期状态码 | 预期响应 | 优先级 |
@@ -268,7 +268,7 @@ class TestAppendMode:
         assert "TC-008" in content
         assert mock_generate.call_args.kwargs["start_index"] == 8
 
-    @patch("api_test_agent.cli.generate_testcases")
+    @patch("api_test_gen.cli.generate_testcases")
     def test_gen_cases_append_rejects_duplicate_endpoint(self, mock_generate, tmp_path):
         output_file = tmp_path / "cases.md"
         output_file.write_text(
@@ -296,7 +296,7 @@ class TestAppendMode:
         assert "duplicate endpoint sections: GET /pets" in result.output
         mock_generate.assert_not_called()
 
-    @patch("api_test_agent.cli.generate_code")
+    @patch("api_test_gen.cli.generate_code")
     def test_gen_code_append_skips_existing(self, mock_generate, tmp_path):
         mock_generate.return_value = {
             "conftest.py": "# new conftest",
@@ -329,7 +329,7 @@ class TestAppendMode:
 
 
 class TestCliGenCodeLayered:
-    @patch("api_test_agent.cli.generate_code")
+    @patch("api_test_gen.cli.generate_code")
     def test_gen_code_layered_requires_doc(self, mock_generate, tmp_path):
         """--arch layered requires --doc for endpoint info."""
         cases_file = tmp_path / "cases.md"
@@ -359,7 +359,7 @@ class TestCliGenCodeLayered:
         assert result.exit_code == 0
         mock_generate.assert_called_once()
 
-    @patch("api_test_agent.cli.generate_code")
+    @patch("api_test_gen.cli.generate_code")
     def test_gen_code_layered_without_doc_fails(self, mock_generate, tmp_path):
         """--arch layered without --doc should error."""
         cases_file = tmp_path / "cases.md"
@@ -385,8 +385,8 @@ class TestCliGenCodeLayered:
 
 
 class TestCliRunLayered:
-    @patch("api_test_agent.cli.generate_code")
-    @patch("api_test_agent.cli.generate_testcases")
+    @patch("api_test_gen.cli.generate_code")
+    @patch("api_test_gen.cli.generate_testcases")
     def test_run_layered(self, mock_testcases, mock_code, tmp_path):
         mock_testcases.return_value = "## GET /pets\n| TC-001 | ... |"
         mock_code.return_value = {

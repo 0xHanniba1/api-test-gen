@@ -1,13 +1,13 @@
 import pytest
 
-from api_test_agent.generator.testcase_document import (
+from api_test_gen.generator.testcase_document import (
     TestCaseDocumentError,
     next_case_index,
     parse_drafts,
     parse_testcase_document,
     render_endpoint_section,
 )
-from api_test_agent.parser.base import ApiEndpoint
+from api_test_gen.parser.base import ApiEndpoint
 
 
 def _endpoint(method: str = "POST", path: str = "/users") -> ApiEndpoint:

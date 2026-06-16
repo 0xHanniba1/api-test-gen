@@ -2,19 +2,19 @@
 
 from pathlib import Path
 
-from api_test_agent.generator.common import (
+from api_test_gen.generator.common import (
     add_generated_file,
     extract_fenced_content,
     validate_and_repair,
 )
-from api_test_agent.generator.naming import group_endpoints_by_tag
-from api_test_agent.generator.testcase_document import (
+from api_test_gen.generator.naming import group_endpoints_by_tag
+from api_test_gen.generator.testcase_document import (
     TestCaseDocument,
     TestCaseDocumentError,
     parse_testcase_document,
 )
-from api_test_agent.llm import LlmClient
-from api_test_agent.parser.base import ApiEndpoint
+from api_test_gen.llm import LlmClient
+from api_test_gen.parser.base import ApiEndpoint
 
 PROMPTS_DIR = Path(__file__).parent.parent / "prompts"
 

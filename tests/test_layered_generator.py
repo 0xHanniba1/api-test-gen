@@ -2,9 +2,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from api_test_agent.generator.layered import LayeredCodeGenerator
-from api_test_agent.generator.testcase_document import TestCaseDocumentError
-from api_test_agent.parser.base import ApiEndpoint
+from api_test_gen.generator.layered import LayeredCodeGenerator
+from api_test_gen.generator.testcase_document import TestCaseDocumentError
+from api_test_gen.parser.base import ApiEndpoint
 
 
 def _ep(method, path, tags):
@@ -166,7 +166,7 @@ FIXED_API_RESPONSE = MOCK_API_RESPONSE.replace(
 
 
 class TestApiLayerGeneration:
-    @patch("api_test_agent.generator.layered.LlmClient")
+    @patch("api_test_gen.generator.layered.LlmClient")
     def test_generate_api_layer(self, MockLlmClient):
         mock_client = MagicMock()
         mock_client.call.return_value = MOCK_API_RESPONSE
@@ -185,7 +185,7 @@ class TestApiLayerGeneration:
 
 
 class TestDataLayerGeneration:
-    @patch("api_test_agent.generator.layered.LlmClient")
+    @patch("api_test_gen.generator.layered.LlmClient")
     def test_generate_data_layer(self, MockLlmClient):
         mock_client = MagicMock()
         mock_client.call.return_value = MOCK_DATA_RESPONSE
@@ -201,7 +201,7 @@ class TestDataLayerGeneration:
 
 
 class TestServicesLayerGeneration:
-    @patch("api_test_agent.generator.layered.LlmClient")
+    @patch("api_test_gen.generator.layered.LlmClient")
     def test_generate_services_layer(self, MockLlmClient):
         mock_client = MagicMock()
         mock_client.call.return_value = MOCK_SERVICES_RESPONSE
@@ -219,7 +219,7 @@ class TestServicesLayerGeneration:
         assert "class UserFlow" in result[1]
         mock_client.call.assert_called_once()
 
-    @patch("api_test_agent.generator.layered.LlmClient")
+    @patch("api_test_gen.generator.layered.LlmClient")
     def test_service_filename_does_not_depend_on_llm_comment(self, MockLlmClient):
         mock_client = MagicMock()
         mock_client.call.return_value = MOCK_SERVICES_RESPONSE.replace(
@@ -236,7 +236,7 @@ class TestServicesLayerGeneration:
 
 
 class TestTestsLayerGeneration:
-    @patch("api_test_agent.generator.layered.LlmClient")
+    @patch("api_test_gen.generator.layered.LlmClient")
     def test_generate_tests_layer(self, MockLlmClient):
         mock_client = MagicMock()
         mock_client.call.return_value = MOCK_TESTS_RESPONSE
@@ -342,8 +342,8 @@ class TestListPets:
 
 
 class TestLayeredGenerate:
-    @patch("api_test_agent.generator.common.validate_files", return_value={})
-    @patch("api_test_agent.generator.layered.LlmClient")
+    @patch("api_test_gen.generator.common.validate_files", return_value={})
+    @patch("api_test_gen.generator.layered.LlmClient")
     def test_generate_returns_all_layers(self, MockLlmClient, _mock_validate):
         mock_client = MagicMock()
         mock_client.call.side_effect = [
@@ -380,8 +380,8 @@ class TestLayeredGenerate:
 
         assert mock_client.call.call_count == 4
 
-    @patch("api_test_agent.generator.common.validate_files", return_value={})
-    @patch("api_test_agent.generator.layered.LlmClient")
+    @patch("api_test_gen.generator.common.validate_files", return_value={})
+    @patch("api_test_gen.generator.layered.LlmClient")
     def test_generate_multi_tag(self, MockLlmClient, _mock_validate):
         """Test with 2 tags: users + pets — should produce 8 LLM calls."""
         mock_client = MagicMock()
@@ -426,8 +426,8 @@ class TestLayeredGenerate:
 
 
 class TestLayeredValidation:
-    @patch("api_test_agent.generator.common.validate_files")
-    @patch("api_test_agent.generator.layered.LlmClient")
+    @patch("api_test_gen.generator.common.validate_files")
+    @patch("api_test_gen.generator.layered.LlmClient")
     def test_retries_on_validation_error(self, MockLlmClient, mock_validate):
         mock_client = MagicMock()
         mock_client.call.side_effect = [
@@ -455,8 +455,8 @@ class TestLayeredValidation:
         assert mock_validate.call_count == 2
         assert mock_client.call.call_count == 5  # 4 layers + 1 retry
 
-    @patch("api_test_agent.generator.common.validate_files")
-    @patch("api_test_agent.generator.layered.LlmClient")
+    @patch("api_test_gen.generator.common.validate_files")
+    @patch("api_test_gen.generator.layered.LlmClient")
     def test_no_retry_when_valid(self, MockLlmClient, mock_validate):
         mock_client = MagicMock()
         mock_client.call.side_effect = [

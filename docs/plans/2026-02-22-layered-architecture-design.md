@@ -6,10 +6,10 @@
 
 ```bash
 # 现有行为不变（默认 --arch flat）
-api-test-agent gen-code testcases.md -o output/
+api-test-gen gen-code testcases.md -o output/
 
 # 新：生成分层架构项目
-api-test-agent gen-code testcases.md -o output/ --arch layered
+api-test-gen gen-code testcases.md -o output/ --arch layered
 ```
 
 ## 输出目录结构
@@ -223,19 +223,19 @@ class TestCreateUser:
 
 | 文件 | 改动 |
 |------|------|
-| `src/api_test_agent/cli.py` | `gen-code` 和 `run` 命令增加 `--arch` 参数 |
-| `src/api_test_agent/generator/code.py` | 重构：抽取现有逻辑为 `FlatCodeGenerator` |
+| `src/api_test_gen/cli.py` | `gen-code` 和 `run` 命令增加 `--arch` 参数 |
+| `src/api_test_gen/generator/code.py` | 重构：抽取现有逻辑为 `FlatCodeGenerator` |
 
 ### 新增的文件
 
 | 文件 | 职责 |
 |------|------|
-| `src/api_test_agent/generator/layered.py` | `LayeredCodeGenerator` 核心生成逻辑 |
-| `src/api_test_agent/generator/templates/` | 模板文件（config、client、conftest、requirements） |
-| `src/api_test_agent/prompts/layered_api.md` | 接口封装层 prompt |
-| `src/api_test_agent/prompts/layered_data.md` | 数据层 YAML 生成 prompt |
-| `src/api_test_agent/prompts/layered_services.md` | 业务编排层 prompt |
-| `src/api_test_agent/prompts/layered_tests.md` | 用例层 prompt |
+| `src/api_test_gen/generator/layered.py` | `LayeredCodeGenerator` 核心生成逻辑 |
+| `src/api_test_gen/generator/templates/` | 模板文件（config、client、conftest、requirements） |
+| `src/api_test_gen/prompts/layered_api.md` | 接口封装层 prompt |
+| `src/api_test_gen/prompts/layered_data.md` | 数据层 YAML 生成 prompt |
+| `src/api_test_gen/prompts/layered_services.md` | 业务编排层 prompt |
+| `src/api_test_gen/prompts/layered_tests.md` | 用例层 prompt |
 | `tests/test_layered_generator.py` | 单元测试 |
 
 ### 不变的文件

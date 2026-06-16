@@ -4,9 +4,9 @@ import hashlib
 import re
 from collections import defaultdict
 
-from api_test_agent.generator.common import normalize_identifier
-from api_test_agent.generator.testcase_document import EndpointSection
-from api_test_agent.parser.base import ApiEndpoint
+from api_test_gen.generator.common import normalize_identifier
+from api_test_gen.generator.testcase_document import EndpointSection
+from api_test_gen.parser.base import ApiEndpoint
 
 
 def assign_endpoint_filenames(

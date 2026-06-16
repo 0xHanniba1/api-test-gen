@@ -2,9 +2,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from api_test_agent.generator.testcase import TestCaseGenerator
-from api_test_agent.generator.testcase_document import TestCaseDocumentError
-from api_test_agent.parser.base import ApiEndpoint
+from api_test_gen.generator.testcase import TestCaseGenerator
+from api_test_gen.generator.testcase_document import TestCaseDocumentError
+from api_test_gen.parser.base import ApiEndpoint
 
 MOCK_LLM_RESPONSE = """```json
 [
@@ -43,7 +43,7 @@ class TestTestCaseGenerator:
             tags=["users"],
         )
 
-    @patch("api_test_agent.generator.testcase.LlmClient")
+    @patch("api_test_gen.generator.testcase.LlmClient")
     def test_generate_returns_markdown(self, MockLlmClient):
         mock_client = MagicMock()
         mock_client.call.return_value = MOCK_LLM_RESPONSE
@@ -56,7 +56,7 @@ class TestTestCaseGenerator:
         assert "TC-002" in result
         assert "POST /api/users" in result
 
-    @patch("api_test_agent.generator.testcase.LlmClient")
+    @patch("api_test_gen.generator.testcase.LlmClient")
     def test_generate_calls_llm_with_skills(self, MockLlmClient):
         mock_client = MagicMock()
         mock_client.call.return_value = MOCK_LLM_RESPONSE
@@ -72,7 +72,7 @@ class TestTestCaseGenerator:
         assert "测试" in system_prompt or "test" in system_prompt.lower()
         assert "JSON" in system_prompt
 
-    @patch("api_test_agent.generator.testcase.LlmClient")
+    @patch("api_test_gen.generator.testcase.LlmClient")
     def test_generate_uses_requested_start_index(self, MockLlmClient):
         mock_client = MagicMock()
         mock_client.call.return_value = MOCK_LLM_RESPONSE
@@ -85,7 +85,7 @@ class TestTestCaseGenerator:
         assert "TC-012" in result
         assert "TC-013" in result
 
-    @patch("api_test_agent.generator.testcase.LlmClient")
+    @patch("api_test_gen.generator.testcase.LlmClient")
     def test_duplicate_endpoints_fail_before_second_llm_call(self, MockLlmClient):
         mock_client = MagicMock()
         mock_client.call.return_value = MOCK_LLM_RESPONSE

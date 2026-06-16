@@ -2,8 +2,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from api_test_agent.parser.base import ApiEndpoint
-from api_test_agent.pipeline import (
+from api_test_gen.parser.base import ApiEndpoint
+from api_test_gen.pipeline import (
     DocumentParseError,
     generate_code,
     generate_testcases,
@@ -24,7 +24,7 @@ def _endpoint() -> ApiEndpoint:
     )
 
 
-@patch("api_test_agent.pipeline.parse_markdown")
+@patch("api_test_gen.pipeline.parse_markdown")
 def test_parse_document_forwards_model_to_markdown(mock_parse, tmp_path):
     doc = tmp_path / "api.md"
     doc.write_text("# API", encoding="utf-8")
@@ -36,7 +36,7 @@ def test_parse_document_forwards_model_to_markdown(mock_parse, tmp_path):
     mock_parse.assert_called_once_with(doc, model="custom-model")
 
 
-@patch("api_test_agent.pipeline.CodeGenerator")
+@patch("api_test_gen.pipeline.CodeGenerator")
 def test_generate_code_selects_flat_generator(MockGenerator):
     generator = MagicMock()
     generator.generate.return_value = {"test_pets.py": "# test"}
@@ -48,7 +48,7 @@ def test_generate_code_selects_flat_generator(MockGenerator):
     MockGenerator.assert_called_once_with(model="test-model")
 
 
-@patch("api_test_agent.pipeline.TestCaseGenerator")
+@patch("api_test_gen.pipeline.TestCaseGenerator")
 def test_generate_testcases_forwards_start_index(MockGenerator):
     generator = MagicMock()
     generator.generate.return_value = "## GET /pets"

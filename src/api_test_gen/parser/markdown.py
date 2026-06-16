@@ -8,8 +8,8 @@ import json
 import re
 from pathlib import Path
 
-from api_test_agent.llm import LlmClient
-from api_test_agent.parser.base import ApiEndpoint
+from api_test_gen.llm import LlmClient
+from api_test_gen.parser.base import ApiEndpoint
 
 SYSTEM_PROMPT = """You are an API documentation parser. Extract all API endpoints from the given document.
 

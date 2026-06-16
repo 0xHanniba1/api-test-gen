@@ -7,8 +7,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, TypeAdapter, ValidationError, field_validator
 
-from api_test_agent.generator.common import GenerationError, extract_fenced_content
-from api_test_agent.parser.base import ApiEndpoint
+from api_test_gen.generator.common import GenerationError, extract_fenced_content
+from api_test_gen.parser.base import ApiEndpoint
 
 CASE_ID_PATTERN = re.compile(r"^TC-(\d+)$", re.IGNORECASE)
 ENDPOINT_HEADING_PATTERN = re.compile(r"^##\s+([A-Za-z]+)\s+(\S+)\s*$")

@@ -1,5 +1,5 @@
 from unittest.mock import patch, MagicMock
-from api_test_agent.llm import LlmClient
+from api_test_gen.llm import LlmClient
 
 
 class TestLlmClient:
@@ -11,7 +11,7 @@ class TestLlmClient:
         client = LlmClient(model="gpt-4o")
         assert client.model == "gpt-4o"
 
-    @patch("api_test_agent.llm.completion")
+    @patch("api_test_gen.llm.completion")
     def test_call_returns_content(self, mock_completion):
         mock_resp = MagicMock()
         mock_resp.choices = [MagicMock()]
@@ -23,7 +23,7 @@ class TestLlmClient:
         assert result == "test response"
         mock_completion.assert_called_once()
 
-    @patch("api_test_agent.llm.completion")
+    @patch("api_test_gen.llm.completion")
     def test_call_passes_model_and_messages(self, mock_completion):
         mock_resp = MagicMock()
         mock_resp.choices = [MagicMock()]

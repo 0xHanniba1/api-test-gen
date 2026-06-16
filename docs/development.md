@@ -9,7 +9,7 @@
 
 ```bash
 git clone <repo-url>
-cd api-test-agent
+cd api-test-gen
 uv sync           # 安装所有依赖（包括开发依赖）
 ```
 
@@ -23,7 +23,7 @@ uv run pytest tests/test_swagger_parser.py -v   # 运行单个测试文件
 ## 项目结构
 
 ```
-src/api_test_agent/
+src/api_test_gen/
 ├── cli.py              # CLI 入口（Click）
 ├── pipeline.py         # 应用层编排（解析、过滤、生成器选择）
 ├── output.py           # 生成文件安全写盘

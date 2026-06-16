@@ -2,10 +2,10 @@
 
 from pathlib import Path
 
-from api_test_agent.llm import LlmClient
-from api_test_agent.parser.base import ApiEndpoint
-from api_test_agent.skills.loader import select_skills, load_skill_content
-from api_test_agent.generator.testcase_document import (
+from api_test_gen.llm import LlmClient
+from api_test_gen.parser.base import ApiEndpoint
+from api_test_gen.skills.loader import select_skills, load_skill_content
+from api_test_gen.generator.testcase_document import (
     TestCaseDocumentError,
     TestCaseDraft,
     parse_drafts,

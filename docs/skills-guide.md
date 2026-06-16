@@ -35,11 +35,11 @@ Skill 是一个 Markdown 文件，包含特定场景的测试策略知识。当 
 
 ### 第一步：创建 Skill 文件
 
-在 `src/api_test_agent/skills/` 目录创建 `.md` 文件：
+在 `src/api_test_gen/skills/` 目录创建 `.md` 文件：
 
 ```bash
 # 例如添加限流测试策略
-touch src/api_test_agent/skills/rate-limiting.md
+touch src/api_test_gen/skills/rate-limiting.md
 ```
 
 ### 第二步：编写内容
@@ -48,7 +48,7 @@ touch src/api_test_agent/skills/rate-limiting.md
 
 ### 第三步：添加加载规则
 
-编辑 `src/api_test_agent/skills/loader.py`，在 `select_skills()` 函数中添加匹配条件：
+编辑 `src/api_test_gen/skills/loader.py`，在 `select_skills()` 函数中添加匹配条件：
 
 ```python
 # 示例：当接口文档中提到限流相关信息时加载

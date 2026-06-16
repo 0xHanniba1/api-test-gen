@@ -2,8 +2,8 @@ from pathlib import Path
 
 import pytest
 
-from api_test_agent.parser.detect import detect_format
-from api_test_agent.parser.swagger import parse_openapi
+from api_test_gen.parser.detect import detect_format
+from api_test_gen.parser.swagger import parse_openapi
 
 FIXTURES = Path(__file__).parent / "fixtures"
 

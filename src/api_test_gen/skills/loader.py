@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from api_test_agent.parser.base import ApiEndpoint
+from api_test_gen.parser.base import ApiEndpoint
 
 SKILLS_DIR = Path(__file__).parent
 

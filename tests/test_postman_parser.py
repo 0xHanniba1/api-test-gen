@@ -2,8 +2,8 @@ from pathlib import Path
 
 import json
 
-from api_test_agent.parser.postman import parse_postman
-from api_test_agent.parser.detect import detect_format
+from api_test_gen.parser.postman import parse_postman
+from api_test_gen.parser.detect import detect_format
 
 FIXTURES = Path(__file__).parent / "fixtures"
 

@@ -1,9 +1,9 @@
-from api_test_agent.generator.naming import (
+from api_test_gen.generator.naming import (
     assign_endpoint_filenames,
     group_endpoints_by_tag,
 )
-from api_test_agent.generator.testcase_document import parse_testcase_document
-from api_test_agent.parser.base import ApiEndpoint
+from api_test_gen.generator.testcase_document import parse_testcase_document
+from api_test_gen.parser.base import ApiEndpoint
 
 
 def _document(*headings: str):
